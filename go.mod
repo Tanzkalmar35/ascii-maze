@@ -1,0 +1,3 @@
+module ascii-maze
+
+go 1.23.3

@@ -6,7 +6,7 @@ import (
 )
 
 const (
-	Wall      = '#'
+	Wall      = '█'
 	Path      = ' '
 	Start     = 'S'
 	End       = 'E'

@@ -1,7 +1,9 @@
 package main
 
 import (
+	"fmt"
 	"math/rand"
+	"strings"
 	"time"
 )
 
@@ -39,25 +41,50 @@ func DisplayMaze(width, height int) *Maze {
 }
 
 func (m *Maze) Render() string {
-	var view string
+	var view strings.Builder
 	for i := range m.grid {
 		for j := range m.grid[i] {
 			switch m.grid[i][j] {
 			case Wall:
-				view += "\033[38;5;15m" + string(Wall) + "\033[0m" // White color for walls
+				view.WriteString("\033[38;5;15m" + string(Wall) + "\033[0m") // White color for walls
 			case Path:
-				view += "\033[38;5;15m" + string(Path) + "\033[0m" // White color for paths
+				view.WriteString("\033[38;5;15m" + string(Path) + "\033[0m") // White color for paths
 			case Start:
-				view += "\033[38;5;15m" + string(Start) + "\033[0m" // White color for start
+				view.WriteString("\033[38;5;15m" + string(Start) + "\033[0m") // White color for start
 			case End:
-				view += "\033[38;5;15m" + string(End) + "\033[0m" // White color for end
+				view.WriteString("\033[38;5;15m" + string(End) + "\033[0m") // White color for end
 			case Indicator:
-				view += "\033[38;5;14m" + string(Indicator) + "\033[0m" // Yellow color for indicator
+				view.WriteString("\033[38;5;14m" + string(Indicator) + "\033[0m") // Yellow color for indicator
 			}
 		}
-		view += "\n"
+		view.WriteString("\n")
 	}
-	return view
+	return view.String()
+}
+
+func (m *Maze) UpdateDisplay() {
+	// Move the cursor to the top left corner
+	fmt.Print("\033[H")
+	// Clear the current line
+	fmt.Print("\033[K")
+	// Print the rendered maze
+	fmt.Print(m.Render())
+}
+
+func (m *Maze) RenderWithPadding() string {
+	// Create a padded maze representation
+	var view strings.Builder
+	for i := 0; i < m.height; i++ {
+		for j := 0; j < m.width; j++ {
+			if i < len(m.grid) && j < len(m.grid[i]) {
+				view.WriteString(string(m.grid[i][j]))
+			} else {
+				view.WriteString(" ") // Fill with spaces if out of bounds
+			}
+		}
+		view.WriteString("\n")
+	}
+	return view.String()
 }
 
 func (m *Maze) GenerateRandomPrimMaze() {
@@ -108,8 +135,10 @@ func (m *Maze) GenerateRandomPrimMaze() {
 			m.grid[f.y][f.x] = Indicator
 		}
 
+		// Update the ui
+		m.UpdateDisplay()
 		// Sleep for 200ms
-		// time.Sleep(200 * time.Millisecond)
+		time.Sleep(500 * time.Nanosecond)
 	}
 }
 

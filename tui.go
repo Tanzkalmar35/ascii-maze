@@ -35,7 +35,7 @@ func (m model) View() string {
 		return currentMaze.Render()
 	}
 
-	return "Press 'q' to quit!\n" + ReGenerateMaze(false)
+	return ReGenerateMaze(false)
 }
 
 func ReGenerateMaze(prim bool) string {

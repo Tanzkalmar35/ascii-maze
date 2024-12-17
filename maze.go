@@ -62,13 +62,23 @@ func (m *Maze) Render() string {
 	return view.String()
 }
 
-func (m *Maze) UpdateDisplay() {
-	// Move the cursor to the top left corner
-	fmt.Print("\033[H")
-	// Clear the current line
-	fmt.Print("\033[K")
-	// Print the rendered maze
-	fmt.Print(m.Render())
+func (m *Maze) UpdateDisplay(changedCells []Cell) {
+	for _, cell := range changedCells {
+		// Move the cursor to the specific cell position
+		fmt.Printf("\033[%d;%dH", cell.y+1, cell.x+1) // +1 because terminal coordinates start at 1
+		switch m.grid[cell.y][cell.x] {
+		case Wall:
+			fmt.Print("\033[38;5;15m" + string(Wall) + "\033[0m") // White color for walls
+		case Path:
+			fmt.Print("\033[38;5;15m" + string(Path) + "\033[0m") // White color for paths
+		case Start:
+			fmt.Print("\033[38;5;15m" + string(Start) + "\033[0m") // White color for start
+		case End:
+			fmt.Print("\033[38;5;15m" + string(End) + "\033[0m") // White color for end
+		case Indicator:
+			fmt.Print("\033[38;5;14m" + string(Indicator) + "\033[0m") // Yellow color for indicator
+		}
+	}
 }
 
 func (m *Maze) RenderWithPadding() string {
@@ -89,13 +99,15 @@ func (m *Maze) RenderWithPadding() string {
 
 func (m *Maze) GenerateRandomPrimMaze() {
 	var frontier []Cell
+	var changedCells []Cell // Track changed cells
 
-	// Generate random starting point inside the grid if its the first iteration
+	// Generate random starting point inside the grid if it's the first iteration
 	frontier = m.GenerateFirstPrimIteration()
 
 	// Paint frontiers
 	for _, f := range frontier {
 		m.grid[f.y][f.x] = Indicator
+		changedCells = append(changedCells, f) // Track change
 	}
 
 	for {
@@ -123,6 +135,9 @@ func (m *Maze) GenerateRandomPrimMaze() {
 		m.grid[inBetweenY][inBetweenX] = Path
 		m.grid[chosenFrontier.y][chosenFrontier.x] = Path
 
+		// Track changes
+		changedCells = append(changedCells, Cell{x: inBetweenX, y: inBetweenY}, Cell{x: chosenFrontier.x, y: chosenFrontier.y})
+
 		// Remove the old chosen frontier from the list
 		frontier[randomlyChosenFrontierIdx] = frontier[len(frontier)-1]
 		frontier = frontier[:len(frontier)-1]
@@ -133,12 +148,14 @@ func (m *Maze) GenerateRandomPrimMaze() {
 		// Paint frontiers
 		for _, f := range frontier {
 			m.grid[f.y][f.x] = Indicator
+			changedCells = append(changedCells, f) // Track change
 		}
 
-		// Update the ui
-		m.UpdateDisplay()
+		// Update the UI with only the changed cells
+		m.UpdateDisplay(changedCells)
 		// Sleep for 200ms
 		time.Sleep(500 * time.Nanosecond)
+		changedCells = nil // Reset changed cells for the next iteration
 	}
 }
 
@@ -187,13 +204,19 @@ func (m *Maze) CalculateValidFrontiers(cell Cell) []Cell {
 
 func (m *Maze) IsValidFrontier(cell Cell) bool {
 	isInMaze := m.IsInMaze(cell)
+	if !isInMaze {
+		return false
+	}
 	isAWall := m.grid[cell.y][cell.x] == Wall
-	return isInMaze && isAWall
+	if !isAWall {
+		return false
+	}
+	return true
 }
 
 func (m *Maze) IsInMaze(cell Cell) bool {
-	isValidX := cell.x < m.width-2 && cell.x > 1
-	isValidY := cell.y < m.height-2 && cell.y > 1
+	isValidX := cell.x < m.width-1 && cell.x >= 1
+	isValidY := cell.y < m.height-1 && cell.y >= 1
 	return isValidX && isValidY
 }
 

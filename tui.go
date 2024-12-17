@@ -13,6 +13,15 @@ type model struct {
 }
 
 func (m model) Init() tea.Cmd {
+	// Generate the maze on startup
+	width, height, err := term.GetSize(int(os.Stdout.Fd()))
+	if err != nil {
+		panic("Could not get terminal size")
+	}
+
+	currentMaze = GenerateMaze(width, height-1, false) // Initialize the maze
+	// go currentMaze.GenerateRandomPrimMaze()  // Start generating the maze in a goroutine
+
 	return nil
 }
 
@@ -35,7 +44,7 @@ func (m model) View() string {
 		return currentMaze.Render()
 	}
 
-	return ReGenerateMaze(false)
+	return "Maze still loading..."
 }
 
 func ReGenerateMaze(prim bool) string {
@@ -45,6 +54,6 @@ func ReGenerateMaze(prim bool) string {
 		panic("Could not get terminal size")
 	}
 
-	maze := GenerateMaze(width, height, prim)
+	maze := GenerateMaze(width, height-1, prim)
 	return maze.Render()
 }

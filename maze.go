@@ -24,6 +24,8 @@ type Cell struct {
 type Maze struct {
 	height, width int
 	grid          [][]rune // Beware, its yx not xy
+	start         Cell
+	end           Cell
 }
 
 func DisplayMaze(width, height int) *Maze {
@@ -50,9 +52,9 @@ func (m *Maze) Render() string {
 			case Path:
 				view.WriteString("\033[38;5;15m" + string(Path) + "\033[0m") // White color for paths
 			case Start:
-				view.WriteString("\033[38;5;15m" + string(Start) + "\033[0m") // White color for start
+				view.WriteString("\033[38;5;14m" + string(Start) + "\033[0m") // White color for start
 			case End:
-				view.WriteString("\033[38;5;15m" + string(End) + "\033[0m") // White color for end
+				view.WriteString("\033[38;5;14m" + string(End) + "\033[0m") // White color for end
 			case Indicator:
 				view.WriteString("\033[38;5;14m" + string(Indicator) + "\033[0m") // Yellow color for indicator
 			}
@@ -72,29 +74,28 @@ func (m *Maze) UpdateDisplay(changedCells []Cell) {
 		case Path:
 			fmt.Print("\033[38;5;15m" + string(Path) + "\033[0m") // White color for paths
 		case Start:
-			fmt.Print("\033[38;5;15m" + string(Start) + "\033[0m") // White color for start
+			fmt.Print("\033[38;5;14m" + string(Start) + "\033[0m") // White color for start
 		case End:
-			fmt.Print("\033[38;5;15m" + string(End) + "\033[0m") // White color for end
+			fmt.Print("\033[38;5;14m" + string(End) + "\033[0m") // White color for end
 		case Indicator:
 			fmt.Print("\033[38;5;14m" + string(Indicator) + "\033[0m") // Yellow color for indicator
 		}
 	}
 }
 
-func (m *Maze) RenderWithPadding() string {
-	// Create a padded maze representation
-	var view strings.Builder
-	for i := 0; i < m.height; i++ {
-		for j := 0; j < m.width; j++ {
-			if i < len(m.grid) && j < len(m.grid[i]) {
-				view.WriteString(string(m.grid[i][j]))
-			} else {
-				view.WriteString(" ") // Fill with spaces if out of bounds
+func (m *Maze) GenerateStartAndEndPosition() {
+	var paths []Cell
+	for i := 0; i < m.width; i++ {
+		for j := 0; j < m.height; j++ {
+			if m.grid[j][i] == Path {
+				paths = append(paths, Cell{x: i, y: j})
 			}
 		}
-		view.WriteString("\n")
 	}
-	return view.String()
+	randomStartPosIdx := GenerateRandomBetween(1, len(paths)-1)
+	randomEndPosIdx := GenerateRandomBetween(2, len(paths)-1)
+	m.start = paths[randomStartPosIdx]
+	m.end = paths[randomEndPosIdx]
 }
 
 func (m *Maze) GenerateRandomPrimMaze() {
@@ -154,9 +155,24 @@ func (m *Maze) GenerateRandomPrimMaze() {
 		// Update the UI with only the changed cells
 		m.UpdateDisplay(changedCells)
 		// Sleep for 200ms
-		time.Sleep(500 * time.Nanosecond)
+		// time.Sleep(5 * time.Millisecond)
+		time.Sleep(1 * time.Millisecond)
 		changedCells = nil // Reset changed cells for the next iteration
 	}
+
+	// Add random start and end positions to the maze
+
+	m.GenerateStartAndEndPosition()
+
+	m.grid[m.start.y][m.start.x] = Start
+	m.grid[m.end.y][m.end.x] = End
+
+	changedCells = append(changedCells, m.start)
+	changedCells = append(changedCells, m.end)
+
+	m.UpdateDisplay(changedCells)
+
+	changedCells = nil
 }
 
 func (m *Maze) GenerateFirstPrimIteration() []Cell {

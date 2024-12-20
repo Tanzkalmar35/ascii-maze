@@ -2,6 +2,7 @@ package main
 
 import (
 	"fmt"
+	"math"
 	"math/rand"
 	"strings"
 	"time"
@@ -19,6 +20,12 @@ var currentMaze *Maze
 
 type Cell struct {
 	x, y int
+}
+
+func (c Cell) GetDistanceToNode(node Node) int {
+	xDistance := float64(c.x - node.cell.x)
+	yDistance := float64(c.y - node.cell.y)
+	return int(math.Abs(xDistance + yDistance))
 }
 
 type Maze struct {
@@ -225,6 +232,18 @@ func (m *Maze) IsValidFrontier(cell Cell) bool {
 	}
 	isAWall := m.grid[cell.y][cell.x] == Wall
 	if !isAWall {
+		return false
+	}
+	return true
+}
+
+func (m *Maze) IsPathInMaze(cell Cell) bool {
+	isInMaze := m.IsInMaze(cell)
+	if !isInMaze {
+		return false
+	}
+	isAPath := m.grid[cell.y][cell.x] == Path
+	if !isAPath {
 		return false
 	}
 	return true

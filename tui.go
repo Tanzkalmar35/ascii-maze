@@ -34,7 +34,7 @@ func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		case "w":
 			// Regenerate maze
 			ReGenerateMaze(true)
-			SolvingStrategy{}.AStarAlgo(m.maze)
+			SolvingStrategy{}.AStarAlgo(*currentMaze)
 		}
 	}
 	return m, nil
@@ -56,5 +56,6 @@ func ReGenerateMaze(prim bool) string {
 	}
 
 	maze := GenerateMaze(width, height-1, prim)
+	currentMaze = maze
 	return maze.Render()
 }

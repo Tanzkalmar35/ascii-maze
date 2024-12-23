@@ -11,8 +11,8 @@ import (
 const (
 	Wall      = '█'
 	Path      = ' '
-	Start     = 'S'
-	End       = 'E'
+	Start     = '▀'
+	End       = '▄'
 	Indicator = '*'
 )
 
@@ -59,11 +59,11 @@ func (m *Maze) Render() string {
 			case Path:
 				view.WriteString("\033[38;5;15m" + string(Path) + "\033[0m") // White color for paths
 			case Start:
-				view.WriteString("\033[38;5;14m" + string(Start) + "\033[0m") // White color for start
+				view.WriteString("\033[38;5;1m" + string(Start) + "\033[0m") // White color for start
 			case End:
-				view.WriteString("\033[38;5;14m" + string(End) + "\033[0m") // White color for end
+				view.WriteString("\033[38;5;9m" + string(End) + "\033[0m") // White color for end
 			case Indicator:
-				view.WriteString("\033[38;5;14m" + string(Indicator) + "\033[0m") // Yellow color for indicator
+				view.WriteString("\033[38;5;4m" + string(Indicator) + "\033[0m") // Yellow color for indicator
 			}
 		}
 		view.WriteString("\n")
@@ -81,11 +81,11 @@ func (m *Maze) UpdateDisplay(changedCells []Cell) {
 		case Path:
 			fmt.Print("\033[38;5;15m" + string(Path) + "\033[0m") // White color for paths
 		case Start:
-			fmt.Print("\033[38;5;14m" + string(Start) + "\033[0m") // White color for start
+			fmt.Print("\033[38;5;1m" + string(Start) + "\033[0m") // White color for start
 		case End:
-			fmt.Print("\033[38;5;14m" + string(End) + "\033[0m") // White color for end
+			fmt.Print("\033[38;5;9m" + string(End) + "\033[0m") // White color for end
 		case Indicator:
-			fmt.Print("\033[38;5;14m" + string(Indicator) + "\033[0m") // Yellow color for indicator
+			fmt.Print("\033[38;5;4m" + string(Indicator) + "\033[0m") // Yellow color for indicator
 		}
 	}
 }

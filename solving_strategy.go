@@ -3,6 +3,7 @@ package main
 import (
 	"math"
 	"slices"
+	"time"
 )
 
 var endNode Node
@@ -67,7 +68,7 @@ func (ss SolvingStrategy) AStarAlgo(m Maze) []Cell {
 	var closedNodes []Node
 	var currentNode Node
 
-	endNode = NewDefaultNode(m.end)
+	endNode = NewDefaultNode(Cell{x: m.end.x, y: m.end.y})
 	startingNode := NewNode(m.start, m.start.GetDistanceToNode(EndNode()), 0, nil)
 
 	openNodes = append(openNodes, startingNode)
@@ -75,7 +76,7 @@ func (ss SolvingStrategy) AStarAlgo(m Maze) []Cell {
 
 	for {
 		if len(openNodes) == 0 {
-			break
+			panic("WIOUDALKSJDLKA")
 		}
 
 		currentNode = openNodes[0]
@@ -92,16 +93,18 @@ func (ss SolvingStrategy) AStarAlgo(m Maze) []Cell {
 		closedNodes = append(closedNodes, currentNode)
 		openNodes = Remove(openNodes, currentNode)
 
-		if currentNode == EndNode() {
+		if currentNode.GetDistance(EndNode()) == 0 {
 			currentPathTile := EndNode()
 			var path []Cell
 			for {
-				if currentPathTile == startingNode {
+				if currentNode.GetDistance(startingNode) == 0 {
 					break
 				}
 
-				path = append(path, currentPathTile.cell)
-				m.grid[currentPathTile.cell.y][currentPathTile.cell.x] = Indicator
+				path = append(path, m.start)
+				path = append(path, m.end)
+				m.grid[m.start.y][m.start.x] = Indicator
+				m.grid[m.end.y][m.end.x] = Indicator
 				currentPathTile = *currentPathTile.parent
 			}
 
@@ -126,6 +129,16 @@ func (ss SolvingStrategy) AStarAlgo(m Maze) []Cell {
 			}
 		}
 
+		var path []Cell
+
+		for _, node := range closedNodes {
+			m.grid[node.cell.y][node.cell.x] = Indicator
+			path = append(path, node.cell)
+		}
+
+		m.UpdateDisplay(path)
+
+		time.Sleep(20 * time.Millisecond)
 	}
 
 	return nil

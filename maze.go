@@ -14,6 +14,7 @@ const (
 	Start     = '▀'
 	End       = '▄'
 	Indicator = '*'
+	BestPath  = '#'
 )
 
 var currentMaze *Maze
@@ -64,6 +65,8 @@ func (m *Maze) Render() string {
 				view.WriteString("\033[38;5;9m" + string(End) + "\033[0m") // White color for end
 			case Indicator:
 				view.WriteString("\033[38;5;4m" + string(Indicator) + "\033[0m") // Yellow color for indicator
+			case BestPath:
+				view.WriteString("\033[38;5;9m" + string(BestPath) + "\033[0m") // Yellow color for indicator
 			}
 		}
 		view.WriteString("\n")
@@ -86,6 +89,8 @@ func (m *Maze) UpdateDisplay(changedCells []Cell) {
 			fmt.Print("\033[38;5;9m" + string(End) + "\033[0m") // White color for end
 		case Indicator:
 			fmt.Print("\033[38;5;4m" + string(Indicator) + "\033[0m") // Yellow color for indicator
+		case BestPath:
+			fmt.Print("\033[38;5;9m" + string(BestPath) + "\033[0m") // Yellow color for indicator
 		}
 	}
 }

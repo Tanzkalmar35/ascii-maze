@@ -55,8 +55,8 @@ func (n Node) GetNeighbours(m Maze) []Node {
 }
 
 func (n Node) GetDistance(node Node) int {
-	xDistance := float64(n.cell.x - node.cell.x)
-	yDistance := float64(n.cell.y - node.cell.y)
+	xDistance := float64(node.cell.x - n.cell.x)
+	yDistance := float64(node.cell.y - n.cell.y)
 	return int(math.Abs(xDistance + yDistance))
 }
 
@@ -65,51 +65,35 @@ type SolvingStrategy struct {
 
 func (ss SolvingStrategy) AStarAlgo(m Maze) []Cell {
 	var openNodes []Node
-	var closedNodes []Node
-	var currentNode Node
-
 	endNode = NewDefaultNode(Cell{x: m.end.x, y: m.end.y})
 	startingNode := NewNode(m.start, m.start.GetDistanceToNode(EndNode()), 0, nil)
 
 	openNodes = append(openNodes, startingNode)
-	currentNode = startingNode
 
 	for {
 		if len(openNodes) == 0 {
-			panic("WIOUDALKSJDLKA")
+			panic("No path found!")
 		}
 
-		currentNode = openNodes[0]
-
-		// select the next node
-		for _, node := range openNodes {
-			if node.fCost < currentNode.fCost {
-				currentNode = node
-			} else if node.fCost == currentNode.fCost &&
-				node.hCost < currentNode.hCost {
-				currentNode = node
+		// Select the node with the lowest fCost
+		minIndex := 0
+		for i, node := range openNodes {
+			if node.fCost < openNodes[minIndex].fCost ||
+				(node.fCost == openNodes[minIndex].fCost && node.hCost < openNodes[minIndex].hCost) {
+				minIndex = i
 			}
 		}
-		closedNodes = append(closedNodes, currentNode)
-		openNodes = Remove(openNodes, currentNode)
 
-		if currentNode.GetDistance(EndNode()) == 0 {
-			currentPathTile := EndNode()
-			var path []Cell
-			for {
-				if currentNode.GetDistance(startingNode) == 0 {
-					break
-				}
+		currentNode := openNodes[minIndex]
+		openNodes = append(openNodes[:minIndex], openNodes[minIndex+1:]...) // Remove the selected node
 
-				path = append(path, m.start)
-				path = append(path, m.end)
-				m.grid[m.start.y][m.start.x] = Indicator
-				m.grid[m.end.y][m.end.x] = Indicator
-				currentPathTile = *currentPathTile.parent
-			}
-
-			m.UpdateDisplay(path)
-			return path
+		// Check if we reached the target
+		if currentNode.cell.x == EndNode().cell.x && currentNode.cell.y == EndNode().cell.y ||
+			currentNode.cell.x == EndNode().cell.x+1 && currentNode.cell.y == EndNode().cell.y ||
+			currentNode.cell.x == EndNode().cell.x-1 && currentNode.cell.y == EndNode().cell.y ||
+			currentNode.cell.x == EndNode().cell.x && currentNode.cell.y == EndNode().cell.y-1 ||
+			currentNode.cell.x == EndNode().cell.x && currentNode.cell.y == EndNode().cell.y+1 {
+			return RetracePath(startingNode, currentNode, m) // Return the path
 		}
 
 		// Get neighbours of the current node
@@ -118,49 +102,52 @@ func (ss SolvingStrategy) AStarAlgo(m Maze) []Cell {
 		for _, neighbour := range neighbours {
 			costOfNavigatingToNeighbour := currentNode.gCost + currentNode.GetDistance(neighbour)
 			neighbourIsOpen := Contains(openNodes, neighbour)
-			if !neighbourIsOpen || costOfNavigatingToNeighbour < neighbour.gCost {
-				neighbour.gCost = costOfNavigatingToNeighbour
-				neighbour.parent = &currentNode
 
-				if !neighbourIsOpen {
-					neighbour.hCost = neighbour.GetDistance(EndNode())
-					openNodes = append(openNodes, neighbour)
+			if neighbourIsOpen {
+				// Update the existing node in openNodes
+				for i, openNode := range openNodes {
+					if openNode.cell == neighbour.cell {
+						if costOfNavigatingToNeighbour < openNode.gCost {
+							openNodes[i].gCost = costOfNavigatingToNeighbour
+							openNodes[i].parent = &currentNode
+						}
+						break
+					}
 				}
+			} else {
+				// Add the new neighbour to openNodes
+				neighbour.hCost = neighbour.GetDistance(EndNode())
+				openNodes = append(openNodes, neighbour)
 			}
 		}
 
+		// Optionally update the display for debugging
 		var path []Cell
-
-		for _, node := range closedNodes {
+		for _, node := range openNodes {
 			m.grid[node.cell.y][node.cell.x] = Indicator
 			path = append(path, node.cell)
 		}
-
 		m.UpdateDisplay(path)
-
-		time.Sleep(20 * time.Millisecond)
+		time.Sleep(5 * time.Millisecond)
 	}
-
-	return nil
 }
 
-func RetracePath(startingNode, targetNode Node, m Maze) {
-	var path []Node
-	var changedCells []Cell
-
+func RetracePath(startingNode, targetNode Node, m Maze) []Cell {
+	var path []Cell
 	currentNode := targetNode
 
-	for {
-		if currentNode != startingNode {
-			path = append(path, currentNode)
-			m.grid[currentNode.cell.y][currentNode.cell.x] = Indicator
-			changedCells = append(changedCells, currentNode.cell)
-			currentNode = *currentNode.parent
-		} else {
-			m.UpdateDisplay(changedCells)
-			break
-		}
-	}
+	for currentNode != startingNode {
+		path = append(path, currentNode.cell)
+		m.grid[currentNode.cell.y][currentNode.cell.x] = BestPath
 
+		if currentNode.parent == nil {
+			break // Prevent dereferencing nil
+		}
+		currentNode = *currentNode.parent
+	}
+	m.UpdateDisplay(path)
+
+	// Reverse the path to get it from start to end
 	slices.Reverse(path)
+	return path
 }

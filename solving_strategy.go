@@ -63,7 +63,7 @@ func (n Node) GetDistance(node Node) int {
 type SolvingStrategy struct {
 }
 
-func (ss SolvingStrategy) AStarAlgo(m Maze) []Cell {
+func (ss SolvingStrategy) AStar(m Maze) []Cell {
 	var openNodes []Node
 	endNode = NewDefaultNode(Cell{x: m.end.x, y: m.end.y})
 	startingNode := NewNode(m.start, m.start.GetDistanceToNode(EndNode()), 0, nil)
@@ -128,7 +128,37 @@ func (ss SolvingStrategy) AStarAlgo(m Maze) []Cell {
 			path = append(path, node.cell)
 		}
 		m.UpdateDisplay(path)
-		time.Sleep(5 * time.Millisecond)
+		time.Sleep(20 * time.Millisecond)
+	}
+}
+
+func (ss SolvingStrategy) DeadEndFilling(m Maze) {
+	var closedCells []Cell
+	for y, _ := range m.grid {
+		for x, _ := range m.grid[y] {
+			if m.grid[y][x] != Path {
+				continue
+			}
+
+			var changedCells []Cell
+			changedCells = append(changedCells, Cell{x: x, y: y})
+			neighbours := NewDefaultNode(changedCells[0]).GetNeighbours(m)
+			numberOfClosedNodesSurrounding := 0
+
+			for _, neighbour := range neighbours {
+				if m.grid[neighbour.cell.y][neighbour.cell.x] == Wall {
+					numberOfClosedNodesSurrounding++
+				} else if Contains(closedCells, neighbour.cell) {
+					numberOfClosedNodesSurrounding++
+				}
+			}
+			if numberOfClosedNodesSurrounding >= 3 {
+				closedCells = append(closedCells, changedCells[0])
+				// Paint that cell
+				m.grid[changedCells[0].y][changedCells[0].x] = Indicator
+				m.UpdateDisplay(changedCells)
+			}
+		}
 	}
 }
 
@@ -145,7 +175,6 @@ func RetracePath(startingNode, targetNode Node, m Maze) []Cell {
 		}
 		currentNode = *currentNode.parent
 	}
-	m.UpdateDisplay(path)
 
 	// Reverse the path to get it from start to end
 	slices.Reverse(path)

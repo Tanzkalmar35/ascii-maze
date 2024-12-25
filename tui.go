@@ -35,7 +35,9 @@ func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			// Regenerate maze
 			ReGenerateMaze(true)
 		case "s":
-			SolvingStrategy{}.AStarAlgo(*currentMaze)
+			SolvingStrategy{}.AStar(*currentMaze)
+		case "d":
+			SolvingStrategy{}.DeadEndFilling(*currentMaze)
 		}
 	}
 	return m, nil

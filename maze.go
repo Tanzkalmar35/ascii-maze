@@ -247,8 +247,8 @@ func (m *Maze) IsPathInMaze(cell Cell) bool {
 	if !isInMaze {
 		return false
 	}
-	isAPath := m.grid[cell.y][cell.x] == Path
-	if !isAPath {
+	isAWall := m.grid[cell.y][cell.x] == Wall
+	if isAWall {
 		return false
 	}
 	return true

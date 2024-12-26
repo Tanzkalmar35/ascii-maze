@@ -128,37 +128,60 @@ func (ss SolvingStrategy) AStar(m Maze) []Cell {
 			path = append(path, node.cell)
 		}
 		m.UpdateDisplay(path)
-		time.Sleep(20 * time.Millisecond)
+		time.Sleep(1 * time.Millisecond)
 	}
 }
 
 func (ss SolvingStrategy) DeadEndFilling(m Maze) {
 	var closedCells []Cell
-	for y, _ := range m.grid {
-		for x, _ := range m.grid[y] {
-			if m.grid[y][x] != Path {
-				continue
-			}
 
-			var changedCells []Cell
-			changedCells = append(changedCells, Cell{x: x, y: y})
-			neighbours := NewDefaultNode(changedCells[0]).GetNeighbours(m)
-			numberOfClosedNodesSurrounding := 0
+	for {
+		var changedCells []Cell
+		var tempClosedCells []Cell
+		anyChange := false // Flag to track if any changes were made in this iteration
 
-			for _, neighbour := range neighbours {
-				if m.grid[neighbour.cell.y][neighbour.cell.x] == Wall {
-					numberOfClosedNodesSurrounding++
-				} else if Contains(closedCells, neighbour.cell) {
-					numberOfClosedNodesSurrounding++
+		for i := 0; i < len(m.grid); i++ { // Loop through rows
+			for j := 0; j < len(m.grid[i]); j++ {
+				if m.grid[i][j] != Path {
+					continue
 				}
-			}
-			if numberOfClosedNodesSurrounding >= 3 {
-				closedCells = append(closedCells, changedCells[0])
-				// Paint that cell
-				m.grid[changedCells[0].y][changedCells[0].x] = Indicator
-				m.UpdateDisplay(changedCells)
+
+				changedCells = append(changedCells, Cell{x: j, y: i})
+				neighbours := NewDefaultNode(changedCells[0]).GetNeighbours(m)
+				amountOfNeighbours := len(neighbours)
+
+				// Count only the neighbors that are in closedCells
+				for _, neighbour := range neighbours {
+					if Contains(closedCells, neighbour.cell) {
+						amountOfNeighbours--
+					}
+				}
+
+				// If it's a dead end, mark it
+				if amountOfNeighbours <= 1 {
+					tempClosedCells = append(tempClosedCells, changedCells[0])
+					anyChange = true // Indicate that a change was made
+				}
+
+				changedCells = changedCells[:0] // Clear changedCells for the next iteration
 			}
 		}
+
+		// Paint the cells
+		for _, cell := range tempClosedCells {
+			m.grid[cell.y][cell.x] = Indicator
+		}
+
+		// Update closedCells with the newly closed cells
+		closedCells = append(closedCells, tempClosedCells...)
+
+		// If no changes were made, break the loop
+		if !anyChange {
+			break
+		}
+
+		// Optionally update the display here if needed
+		m.UpdateDisplay(closedCells)
 	}
 }
 

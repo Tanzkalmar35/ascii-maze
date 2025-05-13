@@ -34,6 +34,7 @@ type Maze struct {
 	grid          [][]rune // Beware, its yx not xy
 	start         Cell
 	end           Cell
+	strategy      string
 }
 
 func DisplayMaze(width, height int) *Maze {
@@ -48,6 +49,10 @@ func DisplayMaze(width, height int) *Maze {
 		}
 	}
 	return maze
+}
+
+func (m *Maze) SetStrategy(strategy string) {
+		m.strategy = strategy
 }
 
 func (m *Maze) Render() string {
@@ -247,9 +252,16 @@ func (m *Maze) IsPathInMaze(cell Cell) bool {
 	if !isInMaze {
 		return false
 	}
-	isAWall := m.grid[cell.y][cell.x] == Wall
-	if isAWall {
-		return false
+	if m.strategy == "astar" {
+		isAPath := m.grid[cell.y][cell.x] == Path
+		if !isAPath {
+		    return false
+		}
+	} else if m.strategy == "deadendfilling" {
+		isAWall := m.grid[cell.y][cell.x] == Wall
+		if isAWall {
+		    return false
+		}
 	}
 	return true
 }

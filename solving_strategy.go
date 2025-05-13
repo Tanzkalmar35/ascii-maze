@@ -6,6 +6,7 @@ import (
 	"time"
 )
 
+var solving_strategy string
 var endNode Node
 
 type Node struct {
@@ -65,6 +66,7 @@ type SolvingStrategy struct {
 
 func (ss SolvingStrategy) AStar(m Maze) []Cell {
 	var openNodes []Node
+	m.SetStrategy("astar")
 	endNode = NewDefaultNode(Cell{x: m.end.x, y: m.end.y})
 	startingNode := NewNode(m.start, m.start.GetDistanceToNode(EndNode()), 0, nil)
 
@@ -134,6 +136,7 @@ func (ss SolvingStrategy) AStar(m Maze) []Cell {
 
 func (ss SolvingStrategy) DeadEndFilling(m Maze) {
 	var closedCells []Cell
+	m.SetStrategy("deadendfilling")
 
 	for {
 		var changedCells []Cell
